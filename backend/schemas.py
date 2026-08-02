@@ -39,6 +39,13 @@ class ScheduleRequest(BaseModel):
     courses: list[str]
 
 
+class CourseError(BaseModel):
+    """A requested course that couldn't be included, and why."""
+
+    course: str
+    reason: str
+
+
 class Combination(BaseModel):
     """One valid, conflict-free pick of sections, one per course+component slot."""
 

@@ -5,6 +5,10 @@ import httpx
 from schemas import CourseCode, Section
 
 
+class CourseNotFoundError(Exception):
+    """Raised when UWaterloo has no record of a course (bad subject/catalog number)."""
+
+
 def fetch_sections(course_code: CourseCode, term_code: str, api_key: str) -> list[Section]:
     """Fetch and parse all sections for one course in one term from UWaterloo's API.
 
@@ -15,12 +19,18 @@ def fetch_sections(course_code: CourseCode, term_code: str, api_key: str) -> lis
 
     Returns:
         List of Section, one per section (LEC/TUT/TST/...) UWaterloo returns.
+        Empty list if the course exists but has no sections offered this term.
+
+    Raises:
+        CourseNotFoundError: If UWaterloo has no record of this course at all.
     """
     url = (
         f"https://openapi.data.uwaterloo.ca/v3/ClassSchedules/"
         f"{term_code}/{course_code.subject}/{course_code.catalog_number}"
     )
     response = httpx.get(url, headers={"x-api-key": api_key}, timeout=5)
+    if response.status_code == 404:
+        raise CourseNotFoundError(f"{course_code.subject}{course_code.catalog_number} not found")
     response.raise_for_status()
 
     sections = []
