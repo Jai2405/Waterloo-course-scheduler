@@ -37,7 +37,7 @@ function CourseInput({ courses, onChange }: CourseInputProps) {
       <button type="button" onClick={addCourse}>
         Add
       </button>
-      <ul>
+      <ul className="course-list">
         {courses.map((course, index) => (
           <li key={course}>
             {course}

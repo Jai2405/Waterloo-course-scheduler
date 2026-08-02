@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { generateSchedules } from "./api"
+import CalendarView from "./CalendarView"
 import CourseInput from "./CourseInput"
 import TermSelect from "./TermSelect"
 import { getUpcomingTerms } from "./term"
@@ -12,12 +13,14 @@ function App() {
   const [courses, setCourses] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<GenerationResult | null>(null)
+  const [viewIndex, setViewIndex] = useState(0)
   const [courseErrors, setCourseErrors] = useState<CourseError[] | null>(null)
   const [generalError, setGeneralError] = useState<string | null>(null)
 
   async function handleGenerate() {
     setLoading(true)
     setResult(null)
+    setViewIndex(0)
     setCourseErrors(null)
     setGeneralError(null)
 
@@ -37,16 +40,25 @@ function App() {
   return (
     <div>
       <h1>watsched</h1>
-      <TermSelect value={term} onChange={setTerm} />
-      <CourseInput courses={courses} onChange={setCourses} />
+
+      <div className="field">
+        <TermSelect value={term} onChange={setTerm} />
+      </div>
+
+      <div className="field">
+        <CourseInput courses={courses} onChange={setCourses} />
+      </div>
+
       <button type="button" onClick={handleGenerate} disabled={loading || courses.length < MIN_COURSES}>
         {loading ? "Generating..." : "Generate"}
       </button>
 
-      {courses.length < MIN_COURSES && <p>Add at least {MIN_COURSES} courses to generate schedules.</p>}
+      {courses.length < MIN_COURSES && (
+        <p className="hint">Add at least {MIN_COURSES} courses to generate schedules.</p>
+      )}
 
       {courseErrors && (
-        <ul>
+        <ul className="error-list">
           {courseErrors.map((e) => (
             <li key={e.course}>
               {e.course}: {e.reason}
@@ -55,9 +67,34 @@ function App() {
         </ul>
       )}
 
-      {generalError && <p>{generalError}</p>}
+      {generalError && <p className="error-message">{generalError}</p>}
 
-      {result && <p>{result.combinations.length} combinations found.</p>}
+      {result && result.combinations.length === 0 && (
+        <p className="error-message">No valid combinations found - every option conflicts.</p>
+      )}
+
+      {result && result.combinations.length > 0 && (
+        <div>
+          <div className="nav">
+            <button type="button" onClick={() => setViewIndex((i) => i - 1)} disabled={viewIndex === 0}>
+              Prev
+            </button>
+            <span>
+              {viewIndex + 1} / {result.combinations.length}
+            </span>
+            <button
+              type="button"
+              onClick={() => setViewIndex((i) => i + 1)}
+              disabled={viewIndex === result.combinations.length - 1}
+            >
+              Next
+            </button>
+          </div>
+          <div className="calendar">
+            <CalendarView combination={result.combinations[viewIndex]} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
