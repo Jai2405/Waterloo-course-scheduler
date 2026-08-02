@@ -1,5 +1,4 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 
 from combinations.generator import generate_combinations
 from config import API_KEY
@@ -9,16 +8,6 @@ from uwaterloo.course_code import parse_course_code
 from uwaterloo.term_code import term_code
 
 app = FastAPI()
-
-# Dev only: allows the Vite dev server (a different origin, since the port
-# differs) to call this API from the browser. Will need the real deployed
-# frontend origin added here once that exists.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_methods=["POST"],
-    allow_headers=["Content-Type"],
-)
 
 
 @app.post("/api/schedules", response_model=GenerationResult)
