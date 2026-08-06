@@ -1,4 +1,7 @@
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 
 from combinations.generator import generate_combinations
 from config import API_KEY
@@ -54,3 +57,11 @@ def generate_schedules(request: ScheduleRequest) -> GenerationResult:
         raise HTTPException(status_code=400, detail=[error.model_dump() for error in errors])
 
     return generate_combinations(sections)
+
+
+# The Docker image copies the built frontend into ./static (see the
+# Dockerfile). It doesn't exist in local dev - the Vite dev server handles
+# the frontend there instead - so this is skipped unless present.
+STATIC_DIR = Path(__file__).parent / "static"
+if STATIC_DIR.exists():
+    app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
